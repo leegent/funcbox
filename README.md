@@ -1,5 +1,9 @@
 # function-box
 
+A web app that can store and run code snippets.
+
+Build your powerful toolbox🛠 with JavaScript!
+
 ## Project setup
 ```
 yarn install
@@ -14,11 +18,3 @@ yarn serve
 ```
 yarn build
 ```
-
-### Lints and fixes files
-```
-yarn lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
