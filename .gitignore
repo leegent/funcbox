@@ -1,6 +1,8 @@
 .DS_Store
 node_modules
 /dist
+/funcbox
+funcbox.zip
 
 # local env files
 .env.local
