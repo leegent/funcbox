@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service build && node processHtml.js && rm -r funcbox && rm funcbox.zip && mv dist funcbox && zip -r funcbox.zip funcbox",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {

@@ -20,9 +20,9 @@
                 >
             </header>
             <section>
-                <codemirror v-model="currentEditingCode" :options="cmOptions"></codemirror>
+                <codemirror class="my-code-mirror" v-model="currentEditingCode" :options="cmOptions"></codemirror>
                 <div class="op-area">
-                    <button class="btn btn-primary" @click="runCode">
+                    <button class="btn btn-primary" title="快捷键：Ctrl/Cmd + R" @click="runCode">
                         <span class="glyphicon glyphicon-play"></span>
                         运行代码
                     </button>
@@ -34,7 +34,7 @@
                         <span class="glyphicon glyphicon-ban-circle"></span>
                         清空输出
                     </button>
-                    <button class="btn btn-primary" @click="save" title="保存代码及主题">
+                    <button class="btn btn-primary" @click="save" title="快捷键：Ctrl/Cmd + S">
                         <span class="glyphicon glyphicon-floppy-disk"></span>
                         保存
                     </button>
@@ -45,18 +45,24 @@
                     <span>当前主题: {{THEME_LIST[currentTheme]}}</span>
                 </div>
             </section>
-            <div id="output" class="output-area">
-                {{currentOutput}}
-            </div>
+            <div id="output" class="output-area">{{currentOutput}}</div>
         </main>
         <div v-else class="empty-status">
             点击右侧加号按钮，创造你的第一个函数工具吧!
         </div>
+        <message
+            :isShow="!!msgType"
+            :type="msgType"
+            :message="msg"
+            @close="msgType = ''"
+        >
+        </message>
     </div>
 </template>
 
 <script>
 import ClipboardJS from 'clipboard';
+import Message from './components/message';
 
 const FUNC_STORAGE_KEY = 'myDearFuncs';
 const THEME_LIST = [
@@ -68,6 +74,9 @@ const THEME_LIST = [
 
 export default {
     name: "App",
+    components: {
+        Message
+    },
     data() {
         return {
             THEME_LIST,
@@ -83,7 +92,9 @@ export default {
             current: -1,
             currentEditingName: '',
             currentEditingCode: '',
-            currentOutput: ''
+            currentOutput: '',
+            msgType: '',
+            msg: ''
         };
     },
     created() {
@@ -100,6 +111,23 @@ export default {
     },
     mounted() {
         new ClipboardJS('#copy-btn');
+        const isMac = window.navigator.userAgent.includes('Macintosh');
+        // 自定义快捷键
+        document.addEventListener('keydown', e => {
+            const hasCtrl = ((isMac && e.metaKey) || (!isMac && e.ctrlKey));
+            if (hasCtrl) {
+                // cmd/ctrl + s 保存
+                if (e.keyCode === 83) {
+                    this.save();
+                    e.preventDefault();
+                }
+                // cmd/ctrl + r 运行
+                else if (e.keyCode === 82) {
+                    this.runCode();
+                    e.preventDefault();
+                }
+            }
+        });
     },
     methods: {
         setCurent(idx) {
@@ -120,7 +148,11 @@ export default {
             this.currentOutput = '';
         },
         copyOutput() {
-            alert('输出已复制到剪贴板');
+            if (this.currentOutput === '') {
+                this.toast('warning', '当前无输出内容');
+            } else {
+                this.toast('success', '输出已复制到剪贴板');
+            }
         },
         save() {
             let funcObj = Object.assign({}, this.funcList[this.current]);
@@ -132,7 +164,7 @@ export default {
                     funcList: this.funcList
                 })
             );
-            alert('保存成功!');
+            this.toast('success', '保存成功！');
         },
         onInputFuncName(e) {
             this.currentEditingName = e.target.value;
@@ -164,6 +196,10 @@ export default {
                 this.currentTheme = 0;
             }
             this.cmOptions.theme = THEME_LIST[this.currentTheme];
+        },
+        toast(msgType, msg) {
+            this.msgType = msgType;
+            this.msg = msg;
         }
     }
 };
@@ -175,7 +211,7 @@ html, body {
     padding: 0;
 }
 #app {
-    height: 100vh;
+    min-height: 100vh;
     font-family: Avenir, Helvetica, Arial, sans-serif;
     color: #2c3e50;
     display: flex;
@@ -186,7 +222,7 @@ html, body {
 aside {
     flex-shrink: 0;
     width: 200px;
-    border-right: 1px solid #333;
+    border-right: 2px solid #999;
 }
 .func-box-title {
     margin: 15px 0;
@@ -262,6 +298,9 @@ header {
     color: #333;
     border-bottom: 2px solid transparent;
 }
+.my-code-mirror {
+    max-width: calc(100vw - 300px);
+}
 .op-area {
     margin: 20px 0;
 }
@@ -273,8 +312,9 @@ header {
     margin-left: 0;
 }
 .output-area {
-    word-break: break-word;
-    font-size: 16px;
+    word-break: break-all;
+    white-space: pre-wrap;
+    font-size: 14px;
     min-height: 100px;
     padding: 20px;
     background: #fff;
